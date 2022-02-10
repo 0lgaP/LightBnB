@@ -3,6 +3,7 @@ const { Pool } = require('pg');
 
 const properties = require('./json/properties.json');
 const users = require('./json/users.json');
+const {setPerams} = require('./setPerams')
 
 const pool = new Pool({
   user: 'vagrant',
@@ -123,9 +124,26 @@ exports.getAllReservations = getAllReservations;
  * @param {*} limit The number of results to return.
  * @return {Promise<[{}]>}  A promise to the properties.
  */
+//Helper Function is imported
+
  const getAllProperties = (options, limit = 10) => {
+
+  let having = 4;
+  if (options.minimum_rating) {
+    having = options.minimum_rating;
+  }
+
+  let perams = setPerams(options);
+
   return pool
-    .query(`SELECT * FROM properties LIMIT $1`, [limit])
+    .query(`SELECT properties.*, avg(property_reviews.rating) as average_rating
+            FROM properties
+            JOIN property_reviews ON properties.id = property_id
+            ${perams}
+            GROUP BY properties.id
+            HAVING avg(property_reviews.rating) >= ${having}
+            ORDER BY cost_per_night
+            LIMIT $1;`, [limit])
     .then((result) => result.rows)
     .catch((err) => {
       console.log(err.message);
