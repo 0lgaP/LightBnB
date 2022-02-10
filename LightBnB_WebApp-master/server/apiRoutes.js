@@ -1,3 +1,5 @@
+// apiRoutes.js and userRoutes.js are responsible for any HTTP requests to /users/something or /api/something.
+
 module.exports = function(router, database) {
 
   router.get('/properties', (req, res) => {

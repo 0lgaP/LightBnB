@@ -1,3 +1,5 @@
+// server.js is the entry point to the application. This connects the routes to the database.
+
 const database = require('./database');
 const apiRoutes = require('./apiRoutes');
 const userRoutes = require('./userRoutes');
