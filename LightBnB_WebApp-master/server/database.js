@@ -3,7 +3,7 @@ const { Pool } = require('pg');
 
 const properties = require('./json/properties.json');
 const users = require('./json/users.json');
-const {setPerams} = require('./setPerams')
+const {setPerams, setValues} = require('./setPerams')
 
 const pool = new Pool({
   user: 'vagrant',
@@ -35,19 +35,7 @@ const getUserWithEmail = (email) => {
     });
 
 }
-//compass code////
-// const getUserWithEmail = function(email) {
-//   let user;
-//   for (const userId in users) {
-//     user = users[userId];
-//     if (user.email.toLowerCase() === email.toLowerCase()) {
-//       break;
-//     } else {
-//       user = null;
-//     }
-//   }
-//   return Promise.resolve(user);
-// }
+
 exports.getUserWithEmail = getUserWithEmail;
 
 /**
@@ -124,9 +112,8 @@ exports.getAllReservations = getAllReservations;
  * @param {*} limit The number of results to return.
  * @return {Promise<[{}]>}  A promise to the properties.
  */
-//Helper Function is imported
 
- const getAllProperties = (options, limit = 10) => {
+const getAllProperties = (options, limit = 10) => {
 
   let having = 4;
   if (options.minimum_rating) {
@@ -158,9 +145,17 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function(property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+  let values = setValues(property);
+  return pool
+  .query(`
+  INSERT INTO properties (owner_id, title, description, thumbnail_photo_url, cover_photo_url, cost_per_night, parking_spaces, number_of_bathrooms, number_of_bedrooms, country, street, city, province, post_code)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+  RETURNING *;
+  `, values)
+  .then((result) => {
+    console.log(result.rows[0])
+    result.rows[0]})
+  .catch((err) => console.log(err.message));
 }
 exports.addProperty = addProperty;
+
